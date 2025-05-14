@@ -2,50 +2,51 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 
 const userSchema = new mongoose.Schema(
-    {
-        username: {
-            type: String,
-        },
-        
-        email: {
-            type: String,
-            required: true,
-            unique: true,
-            match: [/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, 'Please enter a valid email address']
-        },
-        password: {
-            type: String,
-            required: true,
-            minLength: 8,
-            match: [
-                /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/,
-                "Password must be at least 8 characters long and include at least one lowercase letter, one uppercase letter, one digit, and one special character.",
-            ],
-        },
-        role: {
-            type: String,
-            enum: ["admin", "client"],
-        },
-        user_image: {
-            type: String,
-            default: "client.png",
-            required: false,
-        },
-        age : {type : Number},
-        count: {
-            type: Number,
-          
-        },
-        commande: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Commande' }], // one to many
-         // produits : {type : mongoose.Schema.Types.ObjectId,ref: 'produits'} ,//one to one
-         panier: { type: mongoose.Schema.Types.ObjectId, ref: 'Panier' }, // ✅ relation 1:1
-        
-         etat:  Boolean,
-         ban: Boolean,
+  {
+    username: {
+      type: String,
     },
-    { timestamps: true } 
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      match: [/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, 'Please enter a valid email address']
+    },
+    password: {
+      type: String,
+      required: true,
+      minLength: 8,
+      match: [
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/,
+        "Password must be at least 8 characters long and include at least one lowercase letter, one uppercase letter, one digit, and one special character.",
+      ],
+    },
+    role: {
+      type: String,
+      enum: ["admin", "client"],
+    },
+    user_image: {
+      type: String,
+      default: "client.png",
+      required: false,
+    },
+    age: { type: Number },
+    count: {
+      type: Number,
+    },
+    commandes: [{ 
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: 'Commande' 
+    }],
+    panier: { 
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: 'Panier' 
+    },
+    etat: Boolean,
+    ban: Boolean,
+  },
+  { timestamps: true }
 );
-
 // Hash password before saving
 userSchema.pre("save", async function ( next) {
     try {

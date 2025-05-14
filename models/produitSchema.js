@@ -11,7 +11,18 @@ const produitSchema = new mongoose.Schema({
         required: [true, "سعر المنتج مطلوب"],
         min: [0, "السعر لا يمكن أن يكون سالباً"]
     },
+    promotionprice
+    : { 
+        type: Number, 
+        required: [true, "سعر المنتج مطلوب"],
+        min: [0, "السعر لا يمكن أن يكون سالباً"]
+    },
+    
     category: { 
+        type: String,
+        trim: true
+    },
+    promotion: { 
         type: String,
         trim: true
     },

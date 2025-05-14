@@ -60,24 +60,23 @@ module.exports.addCommande = async (req, res) => {
   }
 };
 
-// ✅ Update commande
 module.exports.updateCommande = async (req, res) => {
   try {
     const { id } = req.params;
-    const { model, prix, matricule } = req.body;
+    const { model, prix, matricule , status } = req.body;
 
     const commande = await commandeModel.findById(id);
     if (!commande) {
       return res.status(404).json({ message: "Commande introuvable" });
     }
 
-    if (!model && !prix && !matricule) {
+    if (!model && !prix && !matricule && !status) {
       return res.status(400).json({ message: "Données invalides, au moins un champ doit être mis à jour." });
     }
 
     const updatedCommande = await commandeModel.findByIdAndUpdate(
       id,
-      { model, prix, matricule },
+      { model, prix, matricule , status },
       { new: true }
     );
 
@@ -109,7 +108,6 @@ module.exports.deleteCommandeById = async (req, res) => {
   }
 };
 
-// ✅ Affect commande to user
 module.exports.affect = async (req, res) => {
   try {
     const { userId, commandeId } = req.body;
@@ -128,15 +126,32 @@ module.exports.affect = async (req, res) => {
       return res.status(404).json({ message: "Utilisateur introuvable dans la base de données" });
     }
 
+    // Mise à jour de la commande avec le propriétaire
     await commandeModel.findByIdAndUpdate(commandeId, { owner: userId });
-    await userModel.findByIdAndUpdate(userId, { $push: { commandes: commandeId } });
+    
+    // Ajout de la commande à l'utilisateur
+    await userModel.findByIdAndUpdate(userId, { 
+      $addToSet: { commandes: commandeId } // Utilisation de $addToSet pour éviter les doublons
+    });
 
-    const updatedCommande = await commandeModel.findById(commandeId).populate("owner");
-    const updatedUser = await userModel.findById(userId).populate("commandes");
+    // Récupération des données mises à jour avec populate
+    const updatedCommande = await commandeModel.findById(commandeId)
+      .populate("owner")
+      .populate("produits");
+      
+    const updatedUser = await userModel.findById(userId)
+      .populate("commandes")
+      .populate("panier");
 
-    res.status(200).json({ message: "Commande affectée avec succès", commande: updatedCommande, user: updatedUser });
+    res.status(200).json({ 
+      message: "Commande affectée avec succès", 
+      commande: updatedCommande, 
+      user: updatedUser 
+    });
   } catch (error) {
-    res.status(500).json({ message: "Erreur serveur: " + error.message });
+    res.status(500).json({ 
+      message: "Erreur serveur: " + error.message 
+    });
   }
 };
 

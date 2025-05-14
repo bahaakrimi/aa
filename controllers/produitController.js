@@ -18,7 +18,50 @@ exports.addProduit = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+module.exports.searchProduitByName = async (req, res) => {
+  try {
+    const { name } = req.query;
+    
+    if (!name || name.trim() === '') {
+      return res.status(400).json({ 
+        success: false,
+        message: "Veuillez fournir un nom valide pour la recherche." 
+      });
+    }
 
+    const produits = await Produit.find({
+      name: { $regex: name.trim(), $options: "i" }
+    }).lean();
+
+    const produitsAvecImages = produits.map(produit => {
+      const imageUrl = produit.image
+        ? `${req.protocol}://${req.get('host')}/files/${produit.image}`
+        : `${req.protocol}://${req.get('host')}/files/default-product.png`;
+
+      return {
+        _id: produit._id,
+        name: produit.name,
+        price: produit.price,
+        imageUrl: imageUrl,
+        nbrproduit: produit.nbrproduit
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      count: produitsAvecImages.length,
+      produits: produitsAvecImages
+    });
+
+  } catch (error) {
+    console.error("Erreur de recherche:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "Erreur serveur lors de la recherche",
+      error: error.message 
+    });
+  }
+};
 
 
 
@@ -57,7 +100,7 @@ exports.searchProduits = async (req, res) => {
 // ✅ إضافة منتج جديد مع صورة
 exports.addProduitWithImg = async (req, res) => {
   try {
-    const { name, price, category, nbrproduit } = req.body;
+    const { name, price,promotionprice, category,promotion, nbrproduit } = req.body;
     
     // Check if file exists
     if (!req.file) {
@@ -70,7 +113,9 @@ exports.addProduitWithImg = async (req, res) => {
     const newProduit = new Produit({
       name,
       price,
+      promotionprice,
       category,
+      promotion,
       nbrproduit,
       image: filename
     });
@@ -86,26 +131,26 @@ exports.addProduitWithImg = async (req, res) => {
 // ✅ استرجاع جميع المنتجات مع رابط الصورة
 exports.getProduitWithImg = async (req, res) => {
   try {
-      const produits = await Produit.find();
-      if (!produits || produits.length === 0) {
-          return res.status(404).json({ message: "لا يوجد منتجات" });
-      }
+    const produits = await Produit.find();
+    if (!produits || produits.length === 0) {
+      return res.status(404).json({ message: "Aucun produit trouvé" });
+    }
 
-      const produitsWithImgUrl = produits.map(produit => {
-          const imageUrl = produit.image
-              ? `${req.protocol}://${req.get('host')}/files/${produit.image}`
-              : `${req.protocol}://${req.get('host')}/files/default-product.png`;
+    const produitsWithImgUrl = produits.map(produit => {
+      const imageUrl = produit.image
+        ? `${req.protocol}://${req.get('host')}/files/${produit.image}`
+        : `${req.protocol}://${req.get('host')}/files/default-product.png`;
 
-          return {
-              ...produit._doc,
-              imageUrl: imageUrl,
-          };
-      });
+      return {
+        ...produit._doc,
+        imageUrl: imageUrl,
+      };
+    });
 
-      res.status(200).json(produitsWithImgUrl); // ✔ المتغير الصحيح
+    res.status(200).json(produitsWithImgUrl);
   } catch (error) {
-      console.error("خطأ أثناء جلب المنتجات:", error.message);
-      res.status(500).json({ message: error.message });
+    console.error("Erreur lors de la récupération des produits:", error.message);
+    res.status(500).json({ message: error.message });
   }
 };
 // ✅ Mettre à jour un produit
@@ -163,6 +208,57 @@ exports.updateProduit = async (req, res) => {
         res.status(500).json({ 
             message: "Erreur serveur",
             error: error.message 
+        });
+    }
+};
+exports.filterByPrice = async (req, res) => {
+    try {
+        const { minPrice, maxPrice } = req.query;
+        
+        // Validation des paramètres
+        if (minPrice && isNaN(parseFloat(minPrice))) {
+            return res.status(400).json({ message: "Le prix minimum doit être un nombre valide" });
+        }
+        if (maxPrice && isNaN(parseFloat(maxPrice))) {
+            return res.status(400).json({ message: "Le prix maximum doit être un nombre valide" });
+        }
+
+        let filter = {};
+        
+        // Construction du filtre
+        if (minPrice && maxPrice) {
+            const min = parseFloat(minPrice);
+            const max = parseFloat(maxPrice);
+            
+            if (min > max) {
+                return res.status(400).json({ message: "Le prix minimum ne peut pas être supérieur au prix maximum" });
+            }
+            filter.price = { $gte: min, $lte: max };
+        } else if (minPrice) {
+            filter.price = { $gte: parseFloat(minPrice) };
+        } else if (maxPrice) {
+            filter.price = { $lte: parseFloat(maxPrice) };
+        }
+
+        // Récupération des produits avec les champs nécessaires
+        const produits = await Produit.find(filter)
+            .select('name price promotionprice category nbrproduit image')
+            .lean();
+
+        // Ajout de l'URL complète de l'image pour chaque produit
+        const produitsWithImageUrl = produits.map(produit => ({
+            ...produit,
+            imageUrl: produit.image 
+                ? `${req.protocol}://${req.get('host')}/files/${produit.image}`
+                : `${req.protocol}://${req.get('host')}/files/default-product.png`
+        }));
+
+        res.status(200).json(produitsWithImageUrl);
+    } catch (error) {
+        console.error("Erreur dans filterByPrice:", error);
+        res.status(500).json({ 
+            message: "Erreur serveur lors du filtrage des produits",
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
 };

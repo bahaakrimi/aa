@@ -199,16 +199,20 @@ module.exports.updateuserById = async (req, res) => {
                 res.status(500).json({message: error.message});
             }
         }
-        module.exports.logout= async (req,res) => {
-            try {
-          
-                res.cookie("jwt_token_9antra", "", {httpOnly:false,maxAge:1})
-                res.status(200).json("logged")
-            } catch (error) {
-                res.status(500).json({message: error.message});
-            }
-        }
-    
+        // Dans votre contrôleur d'authentification (authController.js)
+module.exports.logout = async (req, res) => {
+    try {
+        res.clearCookie("jwt_token_9antra", {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict'
+        });
+        res.status(200).json({ success: true, message: "Déconnexion réussie" });
+    } catch (error) {
+        console.error("Erreur de déconnexion:", error);
+        res.status(500).json({ success: false, message: "Échec de la déconnexion" });
+    }
+};
 
 
 

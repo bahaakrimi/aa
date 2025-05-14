@@ -22,6 +22,8 @@ const uploadRoutes = require('./routes/uploadRoutes');
 
 const app = express();
 
+
+require('dotenv').config();
 // Configuration Multer pour le stockage des images
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -63,6 +65,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.json());
 
 // Configuration session
 app.use(session({

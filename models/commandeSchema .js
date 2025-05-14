@@ -7,7 +7,12 @@ const commandeSchema = new mongoose.Schema(
     matricule: { type: String, required: true },
     owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     produits: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Produit' }],
-    email: { type: String, required: true } // Nouveau champ email ajouté
+    email: { type: String, required: true }, 
+    status: {
+      type: String,
+      enum: ["en_attente", "en_traitement", "livre", "annule"],
+      default: "en_attente"
+    },
   },
   { timestamps: true }
 );

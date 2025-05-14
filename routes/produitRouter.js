@@ -7,5 +7,7 @@ router.post('/addProduitWithImg', upload.single("image_produit"), produitControl
 router.get('/with-images', produitController.getProduitWithImg);
 router.put('/updateProduit/:id', produitController.updateProduit);
 router.delete('/deleteProduit/:id', produitController.deleteProduit);
+router.get('/searchProduitByName', produitController.searchProduitByName);
+router.get('/filter', produitController.filterByPrice);
 
 module.exports = router;
