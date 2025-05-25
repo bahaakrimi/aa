@@ -42,6 +42,7 @@ const userSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId, 
       ref: 'Panier' 
     },
+    
     etat: Boolean,
     ban: Boolean,
   },

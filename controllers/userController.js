@@ -106,9 +106,9 @@ module.exports.deleteUserById= async (req,res) => {
 module.exports.updateuserById = async (req, res) => {
     try {
         const {id} = req.params
-        const {email , username} = req.body;
+        const {email , username , age } = req.body;
     
-        await userModel.findByIdAndUpdate(id,{$set : {email , username }})
+        await userModel.findByIdAndUpdate(id,{$set : {email , username , age}})
         const updated = await userModel.findById(id)
     
         res.status(200).json({updated})
@@ -213,6 +213,26 @@ module.exports.logout = async (req, res) => {
         res.status(500).json({ success: false, message: "Échec de la déconnexion" });
     }
 };
-
+// Dans userController.js
+exports.getUserCommandes = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId)
+      .populate({
+        path: 'commandes',
+        populate: {
+          path: 'produits',
+          model: 'Produit'
+        }
+      });
+    
+    if (!user) {
+      return res.status(404).json({ message: "Utilisateur non trouvé" });
+    }
+    
+    res.status(200).json(user.commandes);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
 

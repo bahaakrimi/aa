@@ -21,6 +21,9 @@ router.get('/getAllUsersAgeBetMaxAgeMinAge', userController.getAllUsersAgeBetMax
 router.get('/getAllClient', userController.getAllClient);
 router.get('/getAllAdmin', userController.getAllAdmin);
 
+// Dans votre fichier de routes (ex: userRoutes.js)
+router.get('/:userId/commandes', userController.getUserCommandes);
+
 // ✅ Update & Delete
 router.put('/updateuserById/:id', userController.updateuserById);
 router.delete('/deleteUserById/:id', requireAuthUser, userController.deleteUserById); // الحذف يحتاج صلاحيات

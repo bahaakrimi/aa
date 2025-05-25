@@ -2,6 +2,85 @@ const mongoose = require("mongoose");
 const commandeModel = require("../models/commandeSchema ");
 const userModel = require("../models/userSchema");
 
+
+
+
+const sendEmail = require("../utils/mailer");
+
+exports.createCommande = async (req, res) => {
+    try {
+        const { model, prix, matricula, owner, produits, tel, email } = req.body;
+
+        // 1. Création de la commande
+        const nouvelleCommande = await commandeModel.create({
+            model,
+            prix,
+            matricula,
+            owner,
+            produits,
+            tel,
+            email
+            // Le status "en_attente" est ajouté automatiquement par le schéma
+        });
+
+        // 2. Préparation du contenu de l'email
+        const emailAdmin = 'bahaakrimi145@gmail.com';
+        const emailSubject = `Nouvelle commande: ${model}`;
+        const emailHtml = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2 style="color: #2c3e50;">Nouvelle Commande Reçue</h2>
+                <div style="background: #f9f9f9; padding: 15px; border-radius: 5px;">
+                    <p><strong>🆔 Référence:</strong> ${matricula}</p>
+                    <p><strong>🛒 Produit:</strong> ${model}</p>
+                    <p><strong>💰 Prix:</strong> ${prix} DH</p>
+                    <hr style="border-top: 1px dashed #ddd;">
+                    <p><strong>👤 Client:</strong> ${email}</p>
+                    <p><strong>📞 Téléphone:</strong> ${tel}</p>
+                    <p><strong>📅 Date:</strong> ${nouvelleCommande.createdAt.toLocaleString()}</p>
+                    <p><strong>🔄 Statut:</strong> ${nouvelleCommande.status}</p>
+                </div>
+                <p style="margin-top: 20px; font-size: 0.9em; color: #7f8c8d;">
+                    Connectez-vous à votre dashboard pour traiter cette commande.
+                </p>
+            </div>
+        `;
+
+        // 3. Envoi de l'email (sans attendre la réponse)
+        sendEmail(emailAdmin, emailSubject, 'Nouvelle commande', emailHtml)
+            .catch(err => console.error("Erreur d'envoi d'email:", err));
+
+        // 4. Réponse au client avec le format demandé
+        res.status(201).json({
+            _id: nouvelleCommande._id,  // Obligatoire - l'ID de la commande
+            message: 'Commande créée',
+            success: true,
+            commandeId: nouvelleCommande._id,
+            reference: nouvelleCommande.matricula,
+            status: nouvelleCommande.status,
+            createdAt: nouvelleCommande.createdAt
+        });
+
+    } catch (error) {
+        console.error('Erreur:', error);
+        
+        // Gestion spécifique des erreurs de validation Mongoose
+        if (error.name === 'ValidationError') {
+            return res.status(400).json({
+                success: false,
+                message: 'Données de commande invalides',
+                errors: Object.values(error.errors).map(err => err.message)
+            });
+        }
+
+        res.status(500).json({
+            success: false,
+            message: 'Erreur serveur lors de la création de la commande',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+};
+
+
 // ✅ Get all commandes
 module.exports.getAllCommande = async (req, res) => {
   try {
@@ -33,32 +112,33 @@ module.exports.getCommandeById = async (req, res) => {
   }
 };
 
-// ✅ Add new commande
 module.exports.addCommande = async (req, res) => {
   try {
-    const { model, prix, matricule, produit, email } = req.body;
+    const { model, prix, matricule, email, tel, produits } = req.body;
 
-    if (!model || !prix || !matricule || !email) {
+    if (!model || !prix || !matricule || !email || !tel) {
       return res.status(400).json({ 
-        message: "Données invalides, tous les champs sont requis (model, prix, matricule, email)." 
+        message: "Tous les champs sont requis : model, prix, matricule, email, tel" 
       });
     }
 
     const newCommande = new commandeModel({ 
       model, 
       prix, 
-      matricule, 
-      produits: produit ? [produit] : [], 
-      email 
+      matricule,
+      email,
+      tel,
+      produits: produits || [],
+      status: "en_attente" // Valeur par défaut
     });
     
     const savedCommande = await newCommande.save();
-
     res.status(201).json(savedCommande);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 module.exports.updateCommande = async (req, res) => {
   try {
@@ -183,3 +263,5 @@ module.exports.desaffect = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+

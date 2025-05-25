@@ -9,5 +9,7 @@ router.put('/updateProduit/:id', produitController.updateProduit);
 router.delete('/deleteProduit/:id', produitController.deleteProduit);
 router.get('/searchProduitByName', produitController.searchProduitByName);
 router.get('/filter', produitController.filterByPrice);
+router.post("/addFeedback/:produitId", produitController.addFeedback);
+
 
 module.exports = router;

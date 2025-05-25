@@ -4,9 +4,11 @@ const commandeSchema = new mongoose.Schema(
   {
     model: { type: String, required: true },
     prix: { type: Number, required: true },
-    matricule: { type: String, required: true },
+    matricula: { type: String, required: true },
+
     owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     produits: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Produit' }],
+    tel: { type: Number, required: true },
     email: { type: String, required: true }, 
     status: {
       type: String,

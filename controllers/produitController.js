@@ -262,3 +262,27 @@ exports.filterByPrice = async (req, res) => {
         });
     }
 };
+exports.addFeedback = async (req, res) => {
+    try {
+        const { produitId } = req.params;
+        const { rating, comment } = req.body;
+
+        // Validation simple
+        if (!rating || rating < 1 || rating > 5) {
+            return res.status(400).json({ message: "La note doit être entre 1 et 5." });
+        }
+
+        const produit = await Produit.findById(produitId);
+        if (!produit) {
+            return res.status(404).json({ message: "Produit non trouvé." });
+        }
+
+        // Ajouter le feedback
+        produit.feedbacks.push({ rating, comment });
+        await produit.save({ validateModifiedOnly: true });
+
+        res.status(201).json({ message: "Avis ajouté avec succès", produit });
+    } catch (error) {
+        res.status(500).json({ message: "Erreur serveur", error: error.message });
+    }
+};

@@ -15,7 +15,7 @@ const produitSchema = new mongoose.Schema({
     : { 
         type: Number, 
         required: [true, "سعر المنتج مطلوب"],
-        min: [0, "السعر لا يمكن أن يكون سالباً"]
+       
     },
     
     category: { 
@@ -34,7 +34,17 @@ const produitSchema = new mongoose.Schema({
     image: {
         type: String,
         default: "default-product.png"
-    }
+    },
+    feedbacks: [{
+        rating: { type: Number, required: true, min: 1, max: 5 },
+        comment: { type: String, trim: true },
+        createdAt: { type: Date, default: Date.now }
+    }],
+    owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    commandes: [{ 
+          type: mongoose.Schema.Types.ObjectId, 
+          ref: 'Commande' 
+        }],
 }, { 
     timestamps: true,
     toJSON: { virtuals: true }, // لإضافة الحقول الافتراضية عند التحويل إلى JSON

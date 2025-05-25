@@ -4,8 +4,12 @@ const commandeController = require('../controllers/commandeController'); // تأ
 
 /* Routes pour la gestion des commandes */
 router.get('/getAllCommande', commandeController.getAllCommande);
+
 router.get('/getCommandeById/:id', commandeController.getCommandeById);
 router.post('/addCommande', commandeController.addCommande);
+
+router.post('/add', commandeController.createCommande);
+
 router.put('/updateCommande/:id', commandeController.updateCommande);
 router.put('/affect', commandeController.affect);
 router.put('/desaffect', commandeController.desaffect);
